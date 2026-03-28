@@ -1,0 +1,11 @@
+{
+  "plugins": [
+    {
+      "name": "claude-skills",
+      "description": "A collection of Claude Code skills — html-to-image and more.",
+      "skills": [
+        "html-to-image"
+      ]
+    }
+  ]
+}
