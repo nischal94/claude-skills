@@ -28,7 +28,7 @@ git clone https://github.com/nischal94/claude-skills.git ~/.claude/skills/claude
 | Skill | Description |
 |-------|-------------|
 | [html-to-image](./html-to-image/) | Convert HTML files to high-resolution PNG or JPEG using Puppeteer and system Chrome. No browser download required. |
-| [design-eng](https://github.com/emilkowalski/skill) | UI polish, component design, animation decisions, and the invisible details that make software feel great. |
+| [design-eng](./design-eng/) | UI polish, component design, animation decisions, and the invisible details that make software feel great. |
 
 ## Requirements
 
