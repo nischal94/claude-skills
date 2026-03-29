@@ -2,9 +2,10 @@
   "plugins": [
     {
       "name": "claude-skills",
-      "description": "A collection of Claude Code skills — html-to-image and more.",
+      "description": "A collection of Claude Code skills — html-to-image, design-eng, and more.",
       "skills": [
-        "html-to-image"
+        "html-to-image",
+        "design-eng"
       ]
     }
   ]
