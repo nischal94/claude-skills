@@ -1,13 +1,15 @@
 # skills
 
-**Production-grade skills for [Claude Code](https://claude.ai/code) — map your unknowns before you build, prove you understand what shipped, and turn work into artifacts people actually read.**
+**Production-grade agent skills — map your unknowns before you build, prove you understand what shipped, turn work into artifacts people read, and transcribe any video offline.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-0e6b5c.svg)](./LICENSE)
-[![Skills](https://img.shields.io/badge/skills-6-1c2b2a.svg)](#the-skills)
-[![CI](https://img.shields.io/badge/CI-pinned%20to%20SHAs-0e6b5c.svg)](./.github/workflows)
+[![Skills](https://img.shields.io/badge/skills-8-1c2b2a.svg)](#the-skills)
+[![CI](https://img.shields.io/badge/CI-validated%20%2B%20pinned-0e6b5c.svg)](./.github/workflows)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-9a6a1e.svg)](./CONTRIBUTING.md)
 
-Skills are focused instruction sets that Claude loads on demand. Each one packages a proven workflow — with its checklists, output formats, and guardrails — so you get the same high-quality result every time, in any project, without re-explaining your process.
+Skills are focused instruction sets that an agent loads on demand. Each one packages a proven workflow — with its checklists, output formats, and guardrails — so you get the same high-quality result every time, in any project, without re-explaining your process.
+
+Built for [Claude Code](https://claude.ai/code), portable by format: every skill is a standard `SKILL.md` with YAML frontmatter (the open Agent Skills convention), so any agent or installer that reads the format can use them. A few skills use Claude Code affordances — the Artifact tool, sandbox flags — and fall back to local equivalents elsewhere.
 
 ---
 
@@ -16,6 +18,7 @@ Skills are focused instruction sets that Claude loads on demand. Each one packag
 - [Quick start](#quick-start)
 - [The skills](#the-skills)
   - [Understanding & workflow](#understanding--workflow)
+  - [Transcription](#transcription)
   - [Creation & design](#creation--design)
 - [How skills work](#how-skills-work)
 - [Repository layout](#repository-layout)
@@ -27,7 +30,7 @@ Skills are focused instruction sets that Claude loads on demand. Each one packag
 
 ## Quick start
 
-**Install as a plugin (recommended):**
+**Install as a plugin in Claude Code (recommended):**
 
 ```
 /plugin marketplace add nischal94/skills
@@ -78,6 +81,26 @@ Assembles your prototype, spec, implementation notes, and diff into a single dem
 /pitch Package the prototype, the spec, and the deviations log into one doc for sign-off.
 ```
 
+### Transcription
+
+Two complementary skills behind one routing rule: *captions when they exist, offline speech-to-text when they don't.* Each skill's description points at the other, so the agent picks correctly without overlap.
+
+#### `yt-transcript` — YouTube, in seconds
+
+Downloads the video's existing caption track (creator-uploaded preferred, auto-generated fallback) with yt-dlp, strips VTT timestamps and entities, deduplicates the rolling caption windows, and saves clean prose. No model, no transcription — captions download in seconds.
+
+```
+/yt-transcript https://youtube.com/watch?v=... — get me the transcript.
+```
+
+#### `media-transcript` — everything without captions, fully offline
+
+X/Twitter posts, podcasts, direct media links — anything yt-dlp reaches that has no caption track. Extracts audio and transcribes locally with whisper.cpp; the audio never leaves your machine. Hardened by construction: the whisper model is SHA-256-pinned and verified before every run, URLs are treated as untrusted input, livestreams are timeout-guarded, and audio past ~20 minutes asks before committing your CPU.
+
+```
+/media-transcript https://x.com/user/status/... — transcript please.
+```
+
 ### Creation & design
 
 | Skill | What it does |
@@ -90,9 +113,9 @@ Assembles your prototype, spec, implementation notes, and diff into a single dem
 
 ## How skills work
 
-Claude loads skills in three tiers, so they cost almost nothing until used:
+Skills load in three tiers, so they cost almost nothing until used:
 
-1. **Metadata scan** (~100 tokens) — name and description, always loaded, lets Claude know the skill exists
+1. **Metadata scan** (~100 tokens) — name and description, always loaded, lets the agent know the skill exists
 2. **Full `SKILL.md`** — loaded only on invocation
 3. **Referenced sub-files** — loaded on demand
 
@@ -107,12 +130,16 @@ skills/
 ├── blindspot/            SKILL.md — unknown-unknowns reconnaissance
 ├── explain-diff/         SKILL.md — literate diff explainer + merge-gate quiz
 ├── pitch/                SKILL.md — demo-led buy-in document
+├── yt-transcript/        SKILL.md — YouTube captions → clean prose
+├── media-transcript/     SKILL.md — offline whisper.cpp transcription
 ├── html-to-image/        SKILL.md — HTML → PNG/JPEG rendering
 ├── design-eng/           SKILL.md — UI craft and polish
 ├── product-explainer/    SKILL.md + spec.md — layman product decks
 ├── .claude-plugin/       marketplace.json — plugin manifest
-└── .github/workflows/    CI: gitleaks, actionlint, PR-title lint,
-                          dependency review — all actions pinned to commit SHAs
+└── .github/              CI: validate-skills (manifest ↔ directories sync,
+                          frontmatter completeness), gitleaks, actionlint,
+                          PR-title lint, dependency review — all actions
+                          pinned to commit SHAs
 ```
 
 ---
@@ -123,14 +150,16 @@ skills/
 |-------|-------|
 | `blindspot`, `explain-diff`, `pitch` | Nothing — dependency-free |
 | `design-eng`, `product-explainer` | Nothing — dependency-free |
+| `yt-transcript` | `yt-dlp`, `python3` |
+| `media-transcript` | `yt-dlp`, `whisper-cpp`, `ffmpeg`, and a whisper model (~141 MB, SHA-verified on first use; the skill walks you through the download) |
 | `html-to-image` | Node.js + npm, Google Chrome at `/Applications/Google Chrome.app` (macOS) |
 
 ---
 
 ## Contributing & security
 
-- **Contributing:** skills follow a consistent structure so Claude can load them reliably — see [CONTRIBUTING.md](./CONTRIBUTING.md).
-- **Security:** report vulnerabilities privately via [SECURITY.md](./SECURITY.md). This repo's own CI runs secret scanning on every push and PR, and every workflow action is pinned to a commit SHA.
+- **Contributing:** skills follow a consistent structure so agents can load them reliably — see [CONTRIBUTING.md](./CONTRIBUTING.md). CI enforces it: `validate-skills` fails any PR whose skill directories and manifest drift apart.
+- **Security:** report vulnerabilities privately via [SECURITY.md](./SECURITY.md). This repo's own CI runs secret scanning on every push and PR, every workflow action is pinned to a commit SHA, and `main` is protected by required status checks.
 
 ---
 
