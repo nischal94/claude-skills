@@ -1,0 +1,24 @@
+name: Validate skills
+
+# The repo's core content check: every skill directory has a well-formed
+# SKILL.md (frontmatter with name + description, name matching the
+# directory), and .claude-plugin/marketplace.json lists exactly the
+# skills that exist on disk. Catches the forgotten-manifest-entry bug
+# that ships an invisible skill.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-skills:
+    name: validate-skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Validate skill directories against manifest
+        run: python3 .github/scripts/validate_skills.py
